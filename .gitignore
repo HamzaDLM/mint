@@ -1,0 +1,5 @@
+.venv
+.ruff_cache
+mint.egg-info
+__pycache__
+

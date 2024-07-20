@@ -6,10 +6,11 @@ import sys
 from scanner import Scanner
 from utils import print_colored
 
+
 class Mint:
     had_error = False
 
-    def main(self):
+    def initialize(self):
         if len(sys.argv) > 2:
             print("Usage: Mint [script]")
             sys.exit(65)
@@ -20,7 +21,7 @@ class Mint:
 
     def run_file(self, file_name: str):
         # TODO: handle IO exceptions and add type hint
-        print_colored(f"Running file {file_name}", 'BLUE')
+        print_colored(f"Running file {file_name}", "BLUE")
         with open(file_name, "r", encoding="utf-8") as file:
             source_code = file.read()
             self.run(source_code)
@@ -42,13 +43,17 @@ class Mint:
 
     def run(self, source_code: str):
         scanner = Scanner(source_code)
-        tokens = scanner.scanTokens()
+        _ = scanner.scanTokens()
         # print("Source code: \n", source_code)
         # print("Printing tokens:")
         # for token in tokens:
         #     print(token)
 
 
-if __name__ == "__main__":
+def main():
     mint = Mint()
-    mint.main()
+    mint.initialize()
+
+
+if __name__ == "__main__":
+    main()

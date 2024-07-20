@@ -86,7 +86,7 @@ class Scanner:
         value = ""
         while self.peekNext() != '"':
             if self.peekNext() == "\n" or self.is_at_end():
-                if self.peekNext() == "\n": 
+                if self.peekNext() == "\n":
                     self.line += 1
                 raise Exception(self.format_error("Unterminated string"))
             value += self.source[self.current + 1]
