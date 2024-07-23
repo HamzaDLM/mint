@@ -20,6 +20,6 @@ def print_colored(message: str, color: str):
     print(f"{color_code}{message}{Colors.ENDC}")
 
 
-def format_colored(message: str, color: str) -> str:
+def colorize(message: str, color: str) -> str:
     color_code = getattr(Colors, color.upper(), Colors.ENDC)
     return f"{color_code}{message}{Colors.ENDC}"

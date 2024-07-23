@@ -1,6 +1,25 @@
 from mint_token import Token
 from token_type import TokenType
-from utils import format_colored
+from utils import colorize
+
+KEYWORDS = {
+    "and": TokenType.AND,
+    "class": TokenType.CLASS,
+    "else": TokenType.ELSE,
+    "false": TokenType.FALSE,
+    "for": TokenType.FOR,
+    "fun": TokenType.FUN,
+    "if": TokenType.IF,
+    "nil": TokenType.NIL,
+    "or": TokenType.OR,
+    "print": TokenType.PRINT,
+    "return": TokenType.RETURN,
+    "super": TokenType.SUPER,
+    "this": TokenType.THIS,
+    "true": TokenType.TRUE,
+    "var": TokenType.VAR,
+    "while": TokenType.WHILE,
+}
 
 
 class Scanner:
@@ -11,7 +30,7 @@ class Scanner:
         self.current = -1
         self.line = 1
         self.column = 1
-        print("Source code:\n" + source)
+        print("Source code:\n" + colorize(source, "GREEN"))
 
     def scanTokens(self):
         while not self.is_at_end():
@@ -48,6 +67,7 @@ class Scanner:
                 case "#":  # Comment
                     while self.peek() != "\n" and not self.is_at_end():
                         self.advance()
+                    self.line += 1
                 case "/":
                     self.addToken(TokenType.SLASH)
                 case " ":
@@ -61,33 +81,33 @@ class Scanner:
                 case '"':
                     self.scan_string()
                 case _:
-                    raise Exception(self.format_error("Unexpected character"))
+                    if c.isdigit():
+                        self.scan_number()
+                    elif c.isalpha():
+                        self.scan_identifier()
+                    else:
+                        raise Exception(self.format_error("Unexpected character"))
 
             self.start = self.current
+            c = repr(c) if c in {"\n", "\r"} else c
+            # print(
+            #     colorize(
+            #         f"scanned: {c} line: {self.line} column: {self.column} current: {self.current}",
+            #         "BLUE",
+            #     )
+            # )
             self.scanTokens()
 
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
         return self.tokens
-
-    def format_error(self, text: str = ""):
-        """Display the error and point to it in the snippet of code"""
-
-        error_snippet = self.source.split("\n")[self.line - 1]
-        content_length = f"{self.line} | "
-        pointer = " " * (self.column + len(content_length) - 1) + format_colored(
-            "^-- This shit", "FAIL"
-        )
-        split_line = format_colored("\n==========================================\n", "FAIL")
-
-        return f"{split_line}{format_colored('Error: ' + text, 'FAIL')}\nUnexpected '{self.source[self.current]}' at line {format_colored(str(self.line), 'FAIL')}, column {format_colored(str(self.column), 'FAIL')}\n{content_length}{error_snippet}\n{pointer}{split_line}"
 
     def scan_string(self):
         """Identify a string"""
         value = ""
         while self.peekNext() != '"':
             if self.peekNext() == "\n" or self.is_at_end():
-                if self.peekNext() == "\n":
-                    self.line += 1
+                # if self.peekNext() == "\n":
+                #     self.line += 1
                 raise Exception(self.format_error("Unterminated string"))
             value += self.source[self.current + 1]
             self.advance()
@@ -96,7 +116,25 @@ class Scanner:
         self.addToken(TokenType.STRING, value)
 
     def scan_number(self):
-        raise NotImplementedError("This function needs to be implemented.")
+        """Identify a number"""
+        value = ""
+        while self.peekNext().isdigit() or self.peekNext() == ".":
+            # raise Exception(self.format_error("Incomplete number"))
+            value += self.source[self.current + 1]
+            self.advance()
+
+        self.addToken(TokenType.NUMBER, value)
+
+    def scan_identifier(self):
+        """Identify an identifier / reserved word"""
+        while self.peekNext().isalnum():
+            self.advance()
+
+        value = self.source[self.start + 1 : self.current + 1]
+        if value in KEYWORDS:
+            self.addToken(KEYWORDS[value])
+        else:
+            self.addToken(TokenType.IDENTIFIER, value)
 
     def peek(self):
         if self.is_at_end():
@@ -111,7 +149,7 @@ class Scanner:
     def match(self, expected: str):
         if self.is_at_end() or (self.source[self.current + 1] != expected):
             return False
-
+        self.column += 1
         self.current += 1
         return True
 
@@ -132,3 +170,12 @@ class Scanner:
     def is_at_end(self):
         """Check if we're at the end of source"""
         return (self.current + 1) >= len(self.source)
+
+    def format_error(self, text: str = ""):
+        """Display the error and point to it in the snippet of code"""
+        error_snippet = self.source.split("\n")[self.line - 1]
+        content_length = f"{self.line} | "
+        pointer = " " * (self.column + len(content_length) - 1) + colorize("^-- Here", "FAIL")
+        split_line = colorize("\n==========================================\n", "FAIL")
+
+        return f"{split_line}{colorize('Error: ' + text, 'FAIL')}\nUnexpected '{self.source[self.current]}' at line {colorize(str(self.line), 'FAIL')}, column {colorize(str(self.column), 'FAIL')}\n{content_length}{error_snippet}\n{pointer}{split_line}"

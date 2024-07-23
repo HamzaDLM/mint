@@ -21,7 +21,7 @@ venv:
 .PHONY: install
 install: venv
 	$(PIP) install -e .
-	$(PIP) install -r requirements.txt
+	$(PIP) install -r requirements-dev.txt
 
 # Run tests
 .PHONY: test
