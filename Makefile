@@ -20,9 +20,10 @@ venv:
 # Install deps
 .PHONY: install
 install: venv
+	source $(VENV_DIR)/bin/activate
 	$(PIP) install -e .
 	$(PIP) install -r requirements-dev.txt
-
+	
 # Run tests
 .PHONY: test
 test: install

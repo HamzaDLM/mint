@@ -26,15 +26,22 @@ class Scanner:
     def __init__(self, source: str):
         self.source = source
         self.tokens: list[Token] = []
-        self.start = -1
-        self.current = -1
+        self.start = 0
+        self.current = 0
         self.line = 1
         self.column = 1
+        print("Source code raw:\n" + colorize(repr(source), "GREEN"))
         print("Source code:\n" + colorize(source, "GREEN"))
 
     def scanTokens(self):
         while not self.is_at_end():
             c = self.advance()
+            print(
+                colorize(
+                    f"scan {repr(c)} start {self.start} current {self.current} line: {self.line}",
+                    "WARNING",
+                )
+            )
             match c:
                 case "(":
                     self.addToken(TokenType.LEFT_PAREN)
@@ -90,47 +97,40 @@ class Scanner:
 
             self.start = self.current
             c = repr(c) if c in {"\n", "\r"} else c
-            # print(
-            #     colorize(
-            #         f"scanned: {c} line: {self.line} column: {self.column} current: {self.current}",
-            #         "BLUE",
-            #     )
-            # )
             self.scanTokens()
 
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
         return self.tokens
 
     def scan_string(self):
-        """Identify a string"""
-        value = ""
-        while self.peekNext() != '"':
-            if self.peekNext() == "\n" or self.is_at_end():
-                # if self.peekNext() == "\n":
-                #     self.line += 1
-                raise Exception(self.format_error("Unterminated string"))
-            value += self.source[self.current + 1]
+        while self.peek() != '"' and not self.is_at_end():
+            if self.peek() == "\n" :
+                self.line += 1
             self.advance()
+
+        if self.is_at_end():
+            raise Exception(self.format_error("Unterminated string"))
 
         self.advance()  # consume the last "
-        self.addToken(TokenType.STRING, value)
+        self.addToken(TokenType.STRING, self.source[self.start + 1 : self.current - 1])
 
     def scan_number(self):
-        """Identify a number"""
-        value = ""
-        while self.peekNext().isdigit() or self.peekNext() == ".":
-            # raise Exception(self.format_error("Incomplete number"))
-            value += self.source[self.current + 1]
+        while self.peek().isdigit():
             self.advance()
 
-        self.addToken(TokenType.NUMBER, value)
+        if self.peek() == "." and self.peekNext().isdigit():
+            self.advance()
+
+            while self.peek().isdigit():
+                self.advance()
+
+        self.addToken(TokenType.NUMBER, float(self.source[self.start : self.current]))
 
     def scan_identifier(self):
-        """Identify an identifier / reserved word"""
-        while self.peekNext().isalnum():
+        while self.peek().isalnum():
             self.advance()
 
-        value = self.source[self.start + 1 : self.current + 1]
+        value = self.source[self.start : self.current]
         if value in KEYWORDS:
             self.addToken(KEYWORDS[value])
         else:
@@ -147,28 +147,27 @@ class Scanner:
         return self.source[self.current + 1]
 
     def match(self, expected: str):
-        if self.is_at_end() or (self.source[self.current + 1] != expected):
+        if self.is_at_end() or (self.source[self.current] != expected):
             return False
         self.column += 1
         self.current += 1
         return True
 
     def addToken(self, token_type, literal=None):
-        text = self.source[self.start + 1 : self.current + 1]
+        text = self.source[self.start : self.current]
         print("Adding token:", Token(token_type, text, literal, self.line))
         self.tokens.append(Token(token_type, text, literal, self.line))
 
     def advance(self):
-        """Move forward in the source"""
-        if self.source[self.current] == "\n":
+        value = self.source[self.current]
+        if value == "\n":
             self.column = 0
         self.column += 1
         self.current += 1
         # print(f"advancing from {self.current} which is {self.source[self.current]}")
-        return self.source[self.current]
+        return value
 
     def is_at_end(self):
-        """Check if we're at the end of source"""
         return (self.current + 1) >= len(self.source)
 
     def format_error(self, text: str = ""):
