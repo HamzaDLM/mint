@@ -3,7 +3,7 @@
 # Vars
 PACKAGE_NAME = mint
 SRC_DIR = src
-TEST_DIR = tests
+TEST_DIR = ${SRC_DIR}/tests
 VENV_DIR = .venv
 PYTHON = ${VENV_DIR}/bin/python
 PIP = ${VENV_DIR}/bin/pip
@@ -20,7 +20,7 @@ venv:
 # Install deps
 .PHONY: install
 install: venv
-	source $(VENV_DIR)/bin/activate
+	. $(VENV_DIR)/bin/activate
 	$(PIP) install -e .
 	$(PIP) install -r requirements-dev.txt
 	
@@ -32,22 +32,23 @@ test: install
 # Run linting (Ruff)
 .PHONY: lint
 lint: install
-	$(PYTHON) -m ruff check $(SRC_DIR) $(TEST_DIR)
+	$(PYTHON) -m ruff check $(SRC_DIR) # $(TEST_DIR)
 
 # Run formatter (Ruff)
 .PHONY: format
 format: install
-	$(PYTHON) -m ruff format $(SRC_DIR) $(TEST_DIR)
+	$(PYTHON) -m ruff format $(SRC_DIR) # $(TEST_DIR)
 
 # Run mypy
 .PHONY: mypy
 mypy: install
-	$(PYTHON) -m mypy $(SRC_DIR) $(TEST_DIR)
+	$(PYTHON) -m mypy $(SRC_DIR) # $(TEST_DIR)
 
-# Run mint against a file
+# Run mint against a test file
 .PHONY: run
 run: install
-	$(PYTHON) mint $(file)
+	# echo $(PYTHON) mint ${TEST_DIR}/$(file)
+	$(PYTHON) ${SRC_DIR}/mint.py ${TEST_DIR}/$(file)
 
 # Clean generated files
 .PHONY: clean
@@ -57,6 +58,7 @@ clean:
 	rm -rf $(VENV_DIR)
 	rm -rf .pytest_cache
 	rm -rf .mypy_cache
+	rm -rf .ruff_cache
 
 # Display help
 .PHONY: help

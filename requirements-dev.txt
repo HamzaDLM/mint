@@ -1,0 +1,6 @@
+-e git+https://github.com/HamzaDLM/mint@7a1648932ca21c868bbf5a7c4678b21bb6262ccd#egg=mint
+mypy==1.11.1
+mypy-extensions==1.0.0
+ruff==0.5.6
+tomli==2.0.1
+typing_extensions==4.12.2

@@ -104,7 +104,7 @@ class Scanner:
 
     def scan_string(self):
         while self.peek() != '"' and not self.is_at_end():
-            if self.peek() == "\n" :
+            if self.peek() == "\n":
                 self.line += 1
             self.advance()
 
