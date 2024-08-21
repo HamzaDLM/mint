@@ -1,6 +1,7 @@
+# TODO: add return typehints
 from mint_token import Token
 from token_type import TokenType
-from utils import colorize
+from utils import Colors, colorize
 
 KEYWORDS = {
     "and": TokenType.AND,
@@ -23,6 +24,8 @@ KEYWORDS = {
 
 
 class Scanner:
+    debug = False 
+
     def __init__(self, source: str):
         self.source = source
         self.tokens: list[Token] = []
@@ -30,77 +33,77 @@ class Scanner:
         self.current = 0
         self.line = 1
         self.column = 1
-        print("Source code raw:\n" + colorize(repr(source), "GREEN"))
-        print("Source code:\n" + colorize(source, "GREEN"))
+        print("Source code raw:\n" + colorize(repr(source), Colors.GREEN))
+        print("Source code:\n" + colorize(source, Colors.GREEN))
 
     def scanTokens(self):
+        """Loop over the tokens and scan each one"""
         while not self.is_at_end():
-            c = self.advance()
-            print(
-                colorize(
-                    f"scan {repr(c)} start {self.start} current {self.current} line: {self.line}",
-                    "WARNING",
-                )
-            )
-            match c:
-                case "(":
-                    self.addToken(TokenType.LEFT_PAREN)
-                case ")":
-                    self.addToken(TokenType.RIGHT_PAREN)
-                case "{":
-                    self.addToken(TokenType.LEFT_BRACE)
-                case "}":
-                    self.addToken(TokenType.RIGHT_BRACE)
-                case ",":
-                    self.addToken(TokenType.COMMA)
-                case ".":
-                    self.addToken(TokenType.DOT)
-                case "-":
-                    self.addToken(TokenType.MINUS)
-                case "+":
-                    self.addToken(TokenType.PLUS)
-                case ";":
-                    self.addToken(TokenType.SEMICOLON)
-                case "*":
-                    self.addToken(TokenType.STAR)
-                case "!":
-                    self.addToken(TokenType.BANG_EQUAL if self.match("=") else TokenType.BANG)
-                case "=":
-                    self.addToken(TokenType.EQUAL_EQUAL if self.match("=") else TokenType.EQUAL)
-                case "<":
-                    self.addToken(TokenType.LESS_EQUAL if self.match("=") else TokenType.LESS)
-                case ">":
-                    self.addToken(TokenType.GREATER_EQUAL if self.match("=") else TokenType.GREATER)
-                case "#":  # Comment
-                    while self.peek() != "\n" and not self.is_at_end():
-                        self.advance()
-                    self.line += 1
-                case "/":
-                    self.addToken(TokenType.SLASH)
-                case " ":
-                    pass
-                case "\r":
-                    pass
-                case "\t":
-                    pass
-                case "\n":
-                    self.line += 1
-                case '"':
-                    self.scan_string()
-                case _:
-                    if c.isdigit():
-                        self.scan_number()
-                    elif c.isalpha():
-                        self.scan_identifier()
-                    else:
-                        raise Exception(self.format_error("Unexpected character"))
-
             self.start = self.current
-            c = repr(c) if c in {"\n", "\r"} else c
-            self.scanTokens()
+            self.scanToken()
 
         self.tokens.append(Token(TokenType.EOF, "", None, self.line))
         return self.tokens
+
+    def scanToken(self):
+        c = self.advance()
+        if self.debug:
+            print(f"scan {repr(c)} start {self.start} current {self.current} line: {self.line}")
+        match c:
+            case "(":
+                self.addToken(TokenType.LEFT_PAREN)
+            case ")":
+                self.addToken(TokenType.RIGHT_PAREN)
+            case "{":
+                self.addToken(TokenType.LEFT_BRACE)
+            case "}":
+                self.addToken(TokenType.RIGHT_BRACE)
+            case ",":
+                self.addToken(TokenType.COMMA)
+            case ".":
+                self.addToken(TokenType.DOT)
+            case "-":
+                self.addToken(TokenType.MINUS)
+            case "+":
+                self.addToken(TokenType.PLUS)
+            case ";":
+                self.addToken(TokenType.SEMICOLON)
+            case "*":
+                self.addToken(TokenType.STAR)
+            case "!":
+                self.addToken(TokenType.BANG_EQUAL if self.match("=") else TokenType.BANG)
+            case "=":
+                self.addToken(TokenType.EQUAL_EQUAL if self.match("=") else TokenType.EQUAL)
+            case "<":
+                self.addToken(TokenType.LESS_EQUAL if self.match("=") else TokenType.LESS)
+            case ">":
+                self.addToken(TokenType.GREATER_EQUAL if self.match("=") else TokenType.GREATER)
+            case "#":  # Comment
+                while self.peek() != "\n" and not self.is_at_end():
+                    self.advance()
+                self.line += 1
+            case "/":
+                self.addToken(TokenType.SLASH)
+            case " ":
+                pass
+            case "\r":
+                pass
+            case "\t":
+                pass
+            case "\n":
+                self.line += 1
+            case '"':
+                self.scan_string()
+            case _:
+                if c.isdigit():
+                    self.scan_number()
+                elif c.isalpha():
+                    self.scan_identifier()
+                else:
+                    raise Exception(self.format_error("Unexpected character"))
+
+        # c = repr(c) if c in {"\n", "\r"} else c
+
 
     def scan_string(self):
         while self.peek() != '"' and not self.is_at_end():
@@ -155,7 +158,8 @@ class Scanner:
 
     def addToken(self, token_type, literal=None):
         text = self.source[self.start : self.current]
-        print("Adding token:", Token(token_type, text, literal, self.line))
+        if self.debug: 
+            print(colorize(f"Adding token: {Token(token_type, text, literal, self.line)}", Colors.WARNING))
         self.tokens.append(Token(token_type, text, literal, self.line))
 
     def advance(self):
@@ -174,7 +178,7 @@ class Scanner:
         """Display the error and point to it in the snippet of code"""
         error_snippet = self.source.split("\n")[self.line - 1]
         content_length = f"{self.line} | "
-        pointer = " " * (self.column + len(content_length) - 1) + colorize("^-- Here", "FAIL")
-        split_line = colorize("\n==========================================\n", "FAIL")
+        pointer = " " * (self.column + len(content_length) - 1) + colorize("^-- Here", Colors.FAIL)
+        split_line = colorize("\n==========================================\n", Colors.FAIL)
 
-        return f"{split_line}{colorize('Error: ' + text, 'FAIL')}\nUnexpected '{self.source[self.current]}' at line {colorize(str(self.line), 'FAIL')}, column {colorize(str(self.column), 'FAIL')}\n{content_length}{error_snippet}\n{pointer}{split_line}"
+        return f"{split_line}{colorize('Error: ' + text, Colors.FAIL)}\nUnexpected '{self.source[self.current]}' at line {colorize(str(self.line), Colors.FAIL)}, column {colorize(str(self.column), Colors.FAIL)}\n{content_length}{error_snippet}\n{pointer}{split_line}"

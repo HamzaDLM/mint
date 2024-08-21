@@ -23,7 +23,8 @@ install: venv
 	. $(VENV_DIR)/bin/activate
 	$(PIP) install -e .
 	$(PIP) install -r requirements-dev.txt
-	
+	@clear
+
 # Run tests
 .PHONY: test
 test: install
@@ -49,6 +50,10 @@ mypy: install
 run: install
 	# echo $(PYTHON) mint ${TEST_DIR}/$(file)
 	$(PYTHON) ${SRC_DIR}/mint.py ${TEST_DIR}/$(file)
+
+.PHONY: shell
+shell: install 
+	$(PACKAGE_NAME)
 
 # Clean generated files
 .PHONY: clean

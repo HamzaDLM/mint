@@ -3,8 +3,9 @@ Main entry for Mint language
 """
 
 import sys
+from parser import Parser, ast_printer
 from scanner import Scanner
-from utils import print_colored
+from utils import Colors, print_colored
 
 
 class Mint:
@@ -21,7 +22,7 @@ class Mint:
 
     def run_file(self, file_name: str):
         # TODO: handle IO exceptions and add type hint
-        print_colored(f"Running file {file_name}", "BLUE")
+        print_colored(f"Running file {file_name}", Colors.BLUE)
         with open(file_name, "r", encoding="utf-8") as file:
             source_code = file.read()
             self.run(source_code)
@@ -43,12 +44,17 @@ class Mint:
 
     def run(self, source_code: str):
         scanner = Scanner(source_code)
-        _ = scanner.scanTokens()
-        # print("Source code: \n", source_code)
-        # print("Printing tokens:")
-        # for token in tokens:
-        #     print(token)
+        tokens = scanner.scanTokens()
+        for token in tokens:
+            print_colored(str(token), Colors.WARNING)
 
+        parser = Parser(tokens=tokens)
+        expressions = parser.parse()
+        print_colored(str(expressions), Colors.WARNING)
+
+        if expressions is not None:
+            print(ast_printer(expressions))
+        
 
 def main():
     mint = Mint()

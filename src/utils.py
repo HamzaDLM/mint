@@ -3,7 +3,10 @@ Utilities module
 """
 
 
-class Colors:
+from enum import Enum
+
+
+class Colors(Enum):
     HEADER = "\033[95m"
     BLUE = "\033[94m"
     CYAN = "\033[96m"
@@ -15,11 +18,9 @@ class Colors:
     UNDERLINE = "\033[4m"
 
 
-def print_colored(message: str, color: str):
-    color_code = getattr(Colors, color.upper(), Colors.ENDC)
-    print(f"{color_code}{message}{Colors.ENDC}")
+def print_colored(message: str, color: Colors):
+    print(f"{color.value}{message}{Colors.ENDC.value}")
 
 
-def colorize(message: str, color: str) -> str:
-    color_code = getattr(Colors, color.upper(), Colors.ENDC)
-    return f"{color_code}{message}{Colors.ENDC}"
+def colorize(message: str, color: Colors) -> str:
+    return f"{color.value}{message}{Colors.ENDC.value}"
