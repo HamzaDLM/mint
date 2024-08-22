@@ -5,7 +5,7 @@ Main entry for Mint language
 import sys
 from parser import Parser, ast_printer
 from scanner import Scanner
-from utils import Colors, print_colored
+from utils import Colors, colorize, print_colored
 
 
 class Mint:
@@ -30,11 +30,13 @@ class Mint:
                 sys.exit(65)
 
     def run_prompt(self):
-        print("Running prompt")
+        print("Mint 0.0.1 Prompt")
         while True:
-            line = input("> ")
-            if line is None:
-                self.run(line)
+            line = input(colorize("$> ", Colors.GREEN))
+            if line == "exit()":
+                sys.exit(65)
+            if line:
+                self.run(line + "\n")
                 Mint.had_error = False
 
     def error(self, line: int, message: str):
@@ -54,7 +56,7 @@ class Mint:
 
         if expressions is not None:
             print(ast_printer(expressions))
-        
+
 
 def main():
     mint = Mint()

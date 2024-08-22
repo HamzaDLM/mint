@@ -2,7 +2,6 @@
 Utilities module
 """
 
-
 from enum import Enum
 
 

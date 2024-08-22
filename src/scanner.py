@@ -24,7 +24,7 @@ KEYWORDS = {
 
 
 class Scanner:
-    debug = False 
+    debug = False
 
     def __init__(self, source: str):
         self.source = source
@@ -102,9 +102,6 @@ class Scanner:
                 else:
                     raise Exception(self.format_error("Unexpected character"))
 
-        # c = repr(c) if c in {"\n", "\r"} else c
-
-
     def scan_string(self):
         while self.peek() != '"' and not self.is_at_end():
             if self.peek() == "\n":
@@ -158,8 +155,12 @@ class Scanner:
 
     def addToken(self, token_type, literal=None):
         text = self.source[self.start : self.current]
-        if self.debug: 
-            print(colorize(f"Adding token: {Token(token_type, text, literal, self.line)}", Colors.WARNING))
+        if self.debug:
+            print(
+                colorize(
+                    f"Adding token: {Token(token_type, text, literal, self.line)}", Colors.WARNING
+                )
+            )
         self.tokens.append(Token(token_type, text, literal, self.line))
 
     def advance(self):

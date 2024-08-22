@@ -84,6 +84,7 @@ class ParseException(RuntimeError):
 
 class Parser:
     current = 0
+    debug = False
 
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
@@ -91,18 +92,15 @@ class Parser:
     def parse(self) -> Union[Expr, None]:
         try:
             return self.expression()
-        except Exception as pe: # ParseException as pe:
-            print("PARSE EXCEPTION!!!!!!!", pe)
+        except Exception:  # ParseException as pe:
             return None
 
     def expression(self) -> Expr:
-        print("expression")
         return self.equality()
 
     def equality(self) -> Expr:
-        print("equality")
         expression = self.comparison()
-
+ 
         while self.match([TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL]):
             expression = Binary(
                 left=expression,
@@ -113,7 +111,6 @@ class Parser:
         return expression
 
     def comparison(self) -> Expr:
-        print("comparison")
         expression = self.term()
 
         while self.match(
@@ -133,18 +130,14 @@ class Parser:
         return expression
 
     def term(self) -> Expr:
-        print("term")
         expression = self.factor()
 
         while self.match([TokenType.MINUS, TokenType.PLUS]):
-            expression = Binary(
-                left=expression, operator=self.previous(), right=self.factor()
-            )
+            expression = Binary(left=expression, operator=self.previous(), right=self.factor())
 
         return expression
 
     def factor(self) -> Expr:
-        print("factor")
         expression = self.unary()
 
         while self.match([TokenType.SLASH, TokenType.STAR]):
@@ -157,31 +150,27 @@ class Parser:
         return expression
 
     def unary(self) -> Expr:
-        print("unary")
         if self.match([TokenType.BANG, TokenType.MINUS]):
             return Unary(operator=self.previous(), right=self.unary())
 
         return self.primary()
 
     def primary(self) -> Expr:
-        print("primary")
         if self.match([TokenType.FALSE]):
             return Literal(value=False)
         if self.match([TokenType.TRUE]):
             return Literal(value=True)
         if self.match([TokenType.NIL]):
             return Literal(value=None)
-            
-        print(f"currently: {self.previous()} {self.match([TokenType.NUMBER])}")
+
         if self.match([TokenType.NUMBER, TokenType.STRING]):
-            print("returning:", self.previous().literal)
             return Literal(value=self.previous().literal)
 
         if self.match([TokenType.LEFT_PAREN]):
             expression = self.expression()
             self.consume(TokenType.RIGHT_PAREN, "Expected ')' after expression")
             return Grouping(expression=expression)
-
+        
         raise self.error(self.peek(), "Expected expression")
 
     def match(self, types: list[TokenType]) -> bool:
