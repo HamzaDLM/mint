@@ -3,7 +3,7 @@ Main entry for Mint language
 """
 
 import sys
-from parser import Parser, ast_printer
+from parser import Parser, ast_printer, evaluate 
 from scanner import Scanner
 from utils import Colors, colorize, print_colored
 
@@ -30,7 +30,7 @@ class Mint:
                 sys.exit(65)
 
     def run_prompt(self):
-        print("Mint 0.0.1 Prompt")
+        print("Mint 0.0.1-beta.1 Prompt")
         while True:
             line = input(colorize("$> ", Colors.GREEN))
             if line == "exit()":
@@ -47,16 +47,21 @@ class Mint:
     def run(self, source_code: str):
         scanner = Scanner(source_code)
         tokens = scanner.scanTokens()
+        print("======== TOKENS ===============") 
         for token in tokens:
             print_colored(str(token), Colors.WARNING)
 
         parser = Parser(tokens=tokens)
         expressions = parser.parse()
-        print_colored(str(expressions), Colors.WARNING)
-
+        print("======== EXPRESSIONS ==========") 
         if expressions is not None:
-            print(ast_printer(expressions))
-
+            for expression in expressions:
+                print(ast_printer(expression), colorize(str(expression), Colors.WARNING))
+        
+        print("======== EVALUATE ==========") 
+        if expressions is not None:
+            for expression in expressions:
+                print(evaluate(expression))
 
 def main():
     mint = Mint()

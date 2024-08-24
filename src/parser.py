@@ -89,18 +89,26 @@ class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
 
-    def parse(self) -> Union[Expr, None]:
+    def parse(self) -> Union[list[Expr], None]:
         try:
-            return self.expression()
+            return self.expression_list()
         except Exception:  # ParseException as pe:
             return None
+
+    def expression_list(self) -> list[Expr]:
+        expressions = [self.expression()]
+
+        while self.match([TokenType.COMMA]):
+            expressions.append(self.expression())
+
+        return expressions
 
     def expression(self) -> Expr:
         return self.equality()
 
     def equality(self) -> Expr:
         expression = self.comparison()
- 
+
         while self.match([TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL]):
             expression = Binary(
                 left=expression,
@@ -170,7 +178,7 @@ class Parser:
             expression = self.expression()
             self.consume(TokenType.RIGHT_PAREN, "Expected ')' after expression")
             return Grouping(expression=expression)
-        
+
         raise self.error(self.peek(), "Expected expression")
 
     def match(self, types: list[TokenType]) -> bool:
@@ -241,3 +249,59 @@ class Parser:
                 break
 
         self.advance()
+
+
+def evaluate(expr: Expr):
+    match expr:
+        case Binary():
+            left = evaluate(expr.left)
+            right = evaluate(expr.right)
+
+            match expr.operator.token_type:
+                case TokenType.PLUS:
+                    return float(left) + float(right)
+                case TokenType.MINUS:
+                    return float(left) - float(right)
+                case TokenType.STAR:
+                    return float(left) * float(right)
+                case TokenType.SLASH:
+                    return float(left) / float(right)
+                case TokenType.BANG_EQUAL:
+                    return float(left) != float(right)
+                case TokenType.EQUAL_EQUAL:
+                    return float(left) == float(right)
+                case TokenType.GREATER:
+                    return float(left) > float(right) 
+                case TokenType.GREATER_EQUAL:
+                    return float(left) >= float(right) 
+                case TokenType.LESS:
+                    return float(left) < float(right) 
+                case TokenType.LESS_EQUAL:
+                    return float(left) <= float(right) 
+
+            return None
+
+        case Grouping():
+            return evaluate(expr.expression)
+        case Literal():
+            return expr.value
+        case Unary():
+            right = evaluate(expr.right)
+
+            if expr.operator.token_type == TokenType.BANG:
+                return not is_truthy(right)
+            if expr.operator.token_type == TokenType.MINUS:
+                return -right
+
+            return None
+        case _:
+            raise TypeError("Unsupported type")
+
+
+def is_truthy(item):
+    """False and Nil are false, everything else is true"""
+    if item is None:
+        return False
+    if type(item) is bool:
+        return item
+    return True

@@ -1,9 +1,13 @@
-expression     → equality ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-term           → factor ( ( "-" | "+" ) factor )* ;
-factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary
-               | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" ;
+
+# Precedence (e.g. 1 + 5 * 3,  * has higher precedence than +)
+
+expression-list    → expression | expression "," expression-list
+expression     	   → equality ;
+equality       	   → comparison ( ( "!=" | "==" ) comparison )* ;
+comparison     	   → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+term			   → factor ( ( "-" | "+" ) factor )* ;
+factor			   → unary ( ( "/" | "*" ) unary )* ;
+unary			   → ( "!" | "-" ) unary
+				   | primary ;
+primary			   → NUMBER | STRING | "true" | "false" | "nil"
+				   | "(" expression ")" ;
